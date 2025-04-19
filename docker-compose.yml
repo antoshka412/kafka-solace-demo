@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  solace-pubsub:
+    image: solace/solace-pubsub-standard
+    container_name: solace-pubsub
+    restart: unless-stopped
+    ports:
+      - "8080:8080"        # Web Admin Console
+      - "55556:55555"      # Messaging service (Non-TLS)
+      - "55443:55443"      # Messaging service (TLS)
+      - "8008:8008"        # REST messaging service
+    environment:
+      - username_admin_globalaccesslevel=admin        # Admin user with global access
+      - username_admin_password=admin                # Password for the admin user
+      - system_scaling_maxconnectioncount=100        # Optional: Max connections
+      - system_scaling_maxqueuecount=100             # Optional: Max queues
+      - system_scaling_maxtopiccount=100             # Optional: Max topics
+      - solace.java.shmsize=2g                      # Optional: Memory allocation (e.g. 2 GB)
